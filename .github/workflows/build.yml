@@ -6,17 +6,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.7'
-      - run: gradle wrapper --gradle-version 8.7
-      - run: ./gradlew assembleDebug --no-daemon
+          gradle-version: '8.9'
+
+      - name: estrutura
+        run: find . -type f -not -path './.git/*' | sort
+
+      - name: licencas
+        run: yes | sdkmanager --licenses || true
+
+      - name: build
+        run: gradle assembleDebug --no-daemon --stacktrace
+
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: sniper-apk
+          name: apk
           path: app/build/outputs/apk/debug/*.apk
