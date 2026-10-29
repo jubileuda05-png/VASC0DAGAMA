@@ -46,7 +46,9 @@ cat > src/main/AndroidManifest.xml <<'EOF'
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <application
+        android:name=".App"
         android:label="Nitro Sniper"
+        android:icon="@android:drawable/sym_def_app_icon"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:allowBackup="false">
         <activity
