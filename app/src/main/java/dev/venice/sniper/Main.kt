@@ -48,8 +48,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-/* ---------------- log ---------------- */
-
 object Bus {
     var sink: ((String) -> Unit)? = null
     private val main = Handler(Looper.getMainLooper())
@@ -59,8 +57,6 @@ object Bus {
         main.post { sink?.invoke(line) }
     }
 }
-
-/* ---------------- prefs ---------------- */
 
 object Prefs {
     private fun sp(c: Context) = c.getSharedPreferences("sniper", Context.MODE_PRIVATE)
@@ -79,8 +75,6 @@ object Prefs {
     fun webhook(c: Context) = sp(c).getString("webhook", "") ?: ""
     fun setWebhook(c: Context, v: String) = sp(c).edit().putString("webhook", v).apply()
 }
-
-/* ---------------- contas ---------------- */
 
 data class Account(val id: String, val token: String, val username: String, val main: Boolean)
 
@@ -119,15 +113,11 @@ object Accounts {
     fun alts(c: Context) = load(c).filterNot { it.main }
 }
 
-/* ---------------- http ---------------- */
-
 object Http {
     const val UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
     val api: OkHttpClient = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build()
     val ws: OkHttpClient = OkHttpClient.Builder().pingInterval(30, TimeUnit.SECONDS).build()
 }
-
-/* ---------------- resgate ---------------- */
 
 object Redeemer {
     data class Result(val ok: Boolean, val message: String, val captcha: Boolean = false)
@@ -168,8 +158,6 @@ object Redeemer {
         } catch (e: Exception) { null }
     }
 }
-
-/* ---------------- gateway ---------------- */
 
 class Gateway(private val token: String, private val l: Listener) {
 
@@ -292,8 +280,6 @@ class Gateway(private val token: String, private val l: Listener) {
     }
 }
 
-/* ---------------- notificações ---------------- */
-
 object Notifier {
     const val CH_SVC = "svc"
     const val CH_ALERT = "alert"
@@ -347,8 +333,6 @@ object Notifier {
         Thread { runCatching { Http.api.newCall(req).execute().close() } }.start()
     }
 }
-
-/* ---------------- serviço ---------------- */
 
 class SniperService : Service() {
 
@@ -476,15 +460,11 @@ class SniperService : Service() {
     }
 }
 
-/* ---------------- boot ---------------- */
-
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent?) {
         if (Prefs.autoStart(c) && Accounts.main(c) != null) SniperService.start(c)
     }
 }
-
-/* ---------------- tela ---------------- */
 
 class MainActivity : Activity() {
 
@@ -531,16 +511,11 @@ class MainActivity : Activity() {
         delayInput = input("0", true)
         root.addView(delayInput)
 
-        val useAlts = check("Usar alts se a principal falhar", Prefs.useAlts(this)) { Prefs.setUseAlts(this, it) }
-        val ignoreOwn = check("Ignorar links enviados por mim", Prefs.ignoreOwn(this)) { Prefs.setIgnoreOwn(this, it) }
-        val ignoreBots = check("Ignorar links de bots", Prefs.ignoreBots(this)) { Prefs.setIgnoreBots(this, it) }
-        val sound = check("Som e vibração ao resgatar", Prefs.sound(this)) { Prefs.setSound(this, it) }
-        val autoStart = check("Iniciar sozinho ao ligar o celular", Prefs.autoStart(this)) { Prefs.setAutoStart(this, it) }
-        root.addView(useAlts)
-        root.addView(ignoreOwn)
-        root.addView(ignoreBots)
-        root.addView(sound)
-        root.addView(autoStart)
+        root.addView(check("Usar alts se a principal falhar", Prefs.useAlts(this)) { Prefs.setUseAlts(this, it) })
+        root.addView(check("Ignorar links enviados por mim", Prefs.ignoreOwn(this)) { Prefs.setIgnoreOwn(this, it) })
+        root.addView(check("Ignorar links de bots", Prefs.ignoreBots(this)) { Prefs.setIgnoreBots(this, it) })
+        root.addView(check("Som e vibração ao resgatar", Prefs.sound(this)) { Prefs.setSound(this, it) })
+        root.addView(check("Iniciar sozinho ao ligar o celular", Prefs.autoStart(this)) { Prefs.setAutoStart(this, it) })
 
         root.addView(label("Webhook (opcional)"))
         webhookInput = input("https://discord.com/api/webhooks/...", false)
