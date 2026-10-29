@@ -16,8 +16,12 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: estrutura
-        run: find . -type f -not -path './.git/*' | sort
+      - name: checagem
+        run: |
+          for f in settings.gradle build.gradle src/main/AndroidManifest.xml src/main/java/Main.kt; do
+            if [ -f "$f" ]; then echo "OK $f"; else echo "FALTANDO $f"; fi
+          done
+          find . -type f -not -path './.git/*' | sort
 
       - name: licencas
         run: yes | sdkmanager --licenses || true
@@ -29,4 +33,4 @@ jobs:
         if: always()
         with:
           name: apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: build/outputs/apk/debug/*.apk
