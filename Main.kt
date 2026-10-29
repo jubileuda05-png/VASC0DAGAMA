@@ -2,6 +2,7 @@ package dev.venice.sniper
 
 import android.Manifest
 import android.app.Activity
+import android.app.Application
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,6 +12,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
@@ -23,6 +25,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.InputType
+import android.util.Log
 import android.util.TypedValue
 import android.widget.Button
 import android.widget.CheckBox
@@ -40,6 +43,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.Date
@@ -47,6 +51,17 @@ import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+
+class App : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        val prev = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { t, e ->
+            runCatching { File(filesDir, "crash.txt").writeText(Log.getStackTraceString(e)) }
+            prev?.uncaughtException(t, e)
+        }
+    }
+}
 
 object Bus {
     var sink: ((String) -> Unit)? = null
@@ -482,6 +497,10 @@ class MainActivity : Activity() {
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
 
+        val crashFile = File(filesDir, "crash.txt")
+        val crashText = if (crashFile.exists()) runCatching { crashFile.readText() }.getOrNull() else null
+        if (crashText != null) runCatching { crashFile.delete() }
+
         val scroll = ScrollView(this)
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
@@ -489,6 +508,15 @@ class MainActivity : Activity() {
         root.setPadding(p, p, p, p)
         scroll.addView(root)
         setContentView(scroll)
+
+        if (!crashText.isNullOrEmpty()) {
+            val tv = TextView(this)
+            tv.text = crashText
+            tv.setTextColor(Color.RED)
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+            tv.setPadding(0, 0, 0, (16 * dp).toInt())
+            root.addView(tv)
+        }
 
         root.addView(title("Nitro Sniper", 24f))
         root.addView(label("Token da conta principal"))
